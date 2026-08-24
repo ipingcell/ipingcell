@@ -120,198 +120,105 @@ async function renderAdmin(){
   };
 }
 
-
 function drawAdminRows(add=false){
+  const rows = $("#adminRows");
 
-  const rows=$("#adminRows");
+  const provider = $("#adminProvider")?.value || selectedProvider;
+  const search = ($("#adminSearch")?.value || "").toLowerCase().trim();
 
-  const provider=$("#adminProvider")?.value || selectedProvider;
-  const search=($("#adminSearch")?.value || "").toLowerCase().trim();
-
-  let data=packages.filter(x=>x.provider_id===provider);
+  let data = packages.filter(x => x.provider_id === provider);
 
   if(search){
-    data=data.filter(x=>
-      String(x.name||"").toLowerCase().includes(search)
+    data = data.filter(x =>
+      String(x.name || "").toLowerCase().includes(search)
     );
   }
 
   if(add){
     data.unshift({
-      id:null,
-      provider_id:provider,
-      duration:selectedDuration || "5 HARI",
-      name:"",
-      price:0,
-      tag:"Internet",
-      active:true
+      id: null,
+      provider_id: provider,
+      duration: selectedDuration || "5 HARI",
+      name: "",
+      price: 0,
+      tag: "Internet",
+      active: true
     });
   }
 
   if(!data.length){
-    rows.innerHTML=`
-      <div style="padding:25px;text-align:center;opacity:.7">
-        Paket tidak ditemukan.
+    rows.innerHTML = `
+      <div style="
+        padding:25px;
+        text-align:center;
+        opacity:.7;
+      ">
+        Paket tidak ditemukan
       </div>
     `;
     return;
   }
 
-  rows.innerHTML=data.map(x=>{
+  rows.innerHTML = data.map(x => `
+    <div class="admin-row compact-admin-row" data-admin-row="${x.id ?? 'new'}">
 
-    const isNew=!x.id;
+      <div class="admin-package-info">
 
-    return `
-      <div class="admin-row" data-admin-row="${x.id??"new"}">
-
-        <label>
-          Nama Paket
-
+        <div class="admin-field name-field">
+          <label>Nama Paket</label>
           <input
-            data-f="name"
-            value="${esc(x.name)}"
-            ${isNew?"":"readonly"}
+            data-f-name
+            value="${x.name || ""}"
+            placeholder="Nama paket"
+            ${x.id ? "readonly" : ""}
           >
-        </label>
+        </div>
 
-        <label>
-          Harga
-
+        <div class="admin-field price-field">
+          <label>Harga</label>
           <input
-            data-f="price"
+            data-f-price
             type="number"
             inputmode="numeric"
-            value="${x.price||0}"
+            value="${x.price || ""}"
+            placeholder="Harga"
           >
-        </label>
+        </div>
 
-        <label>
-          Masa Aktif
-
-          <select data-f="duration" ${isNew?"":"disabled"}>
-            ${[
-              "1 HARI",
-              "2 HARI",
-              "3 HARI",
-              "5 HARI",
-              "7 HARI",
-              "14 HARI",
-              "28 HARI"
-            ].map(d=>`
-              <option ${d===x.duration?"selected":""}>
-                ${d}
-              </option>
-            `).join("")}
+        <div class="admin-field duration-field">
+          <label>Masa Aktif</label>
+          <select data-f-duration ${x.id ? "disabled" : ""}>
+            ${["1 HARI","2 HARI","3 HARI","5 HARI","7 HARI","14 HARI","28 HARI"]
+              .map(d => `
+                <option value="${d}" ${d === x.duration ? "selected" : ""}>
+                  ${d}
+                </option>
+              `).join("")}
           </select>
-        </label>
-
-        <div style="display:flex;gap:8px;align-items:end">
-          <button
-            class="primary-btn"
-            data-save="${x.id??"new"}"
-          >
-            ${isNew?"Tambah":"Simpan Harga"}
-          </button>
-
-          ${
-            x.id
-            ? `<button class="danger-btn" data-del="${x.id}">Hapus</button>`
-            : ""
-          }
         </div>
 
       </div>
-    `;
-  }).join("");
 
+      <div class="admin-actions">
+        <button
+          class="primary-btn compact-save"
+          data-save
+        >
+          💾 Simpan
+        </button>
 
-  rows.onclick=async e=>{
+        <button
+          class="danger-btn compact-delete"
+          data-del
+        >
+          🗑️ Hapus
+        </button>
+      </div>
 
-    const save=e.target.closest("[data-save]");
-
-    if(save){
-
-      const r=save.closest(".admin-row");
-
-      const name=r.querySelector('[data-f="name"]').value.trim();
-      const price=Number(
-        r.querySelector('[data-f="price"]').value
-      );
-
-      const duration=r.querySelector('[data-f="duration"]').value;
-
-      if(!name){
-        showToast("Nama paket belum diisi");
-        return;
-      }
-
-      if(price<=0){
-        showToast("Harga harus lebih dari 0");
-        return;
-      }
-
-      let res;
-
-      if(save.dataset.save==="new"){
-
-        const payload={
-          provider_id:provider,
-          name:name,
-          price:price,
-          duration:duration,
-          tag:"Internet",
-          active:true
-        };
-
-        res=await sb.from("packages").insert(payload);
-
-      }else{
-
-        res=await sb
-          .from("packages")
-          .update({price:price})
-          .eq("id",save.dataset.save);
-      }
-
-      if(res.error){
-
-        showToast(res.error.message);
-
-      }else{
-
-        showToast("Harga berhasil disimpan");
-
-        await renderAdmin();
-        await loadData();
-      }
-    }
-
-
-    const del=e.target.closest("[data-del]");
-
-    if(del){
-
-      if(!confirm("Hapus paket ini?")) return;
-
-      const res=await sb
-        .from("packages")
-        .delete()
-        .eq("id",del.dataset.del);
-
-      if(res.error){
-
-        showToast(res.error.message);
-
-      }else{
-
-        showToast("Paket dihapus");
-
-        await renderAdmin();
-        await loadData();
-      }
-    }
-  };
+    </div>
+  `).join("");
 }
+
 function showToast(t){const x=$("#toast");x.textContent=t;x.hidden=false;setTimeout(()=>x.hidden=true,2500)}
 loadData();
   
