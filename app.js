@@ -349,3 +349,9 @@ $("#adminRows").onclick=async e=>{
 function showToast(t){const x=$("#toast");x.textContent=t;x.hidden=false;setTimeout(()=>x.hidden=true,2500)}
 loadData();
   
+    }
+
+    }
+
+};
+}
