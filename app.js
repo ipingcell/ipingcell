@@ -76,7 +76,8 @@ async function renderAdmin(){
 
     <div class="admin-toolbar">
       <button id="addPkg" class="primary-btn">+ Tambah Paket</button>
-      <button id="logout" class="outline-btn">Logout</button>
+      <button id="saveAll" class="primary-btn">💾 Simpan Semua</button>
+      +<button id="logout" class="outline-btn">Logout</button>
     </div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:15px 0">
@@ -114,6 +115,50 @@ async function renderAdmin(){
     drawAdminRows(true);
   };
 
+  $("#saveAll").onclick=async()=>{
+  const rows=$("#adminRows .admin-row");
+
+  if(!rows.length){
+    showToast("Tidak ada paket untuk disimpan");
+    return;
+  }
+
+  let berhasil=0;
+
+  for(const row of rows){
+    const id=row.dataset.adminRow;
+
+    if(!id || id==="new") continue;
+
+    const name=row.querySelector('[data-f="name"]').value.trim();
+    const price=Number(row.querySelector('[data-f="price"]').value);
+    const duration=row.querySelector('[data-f="duration"]').value;
+
+    if(!name || !price || !duration) continue;
+
+    const res=await sb
+      .from("packages")
+      .update({
+        name:name,
+        price:price,
+        duration:duration
+      })
+      .eq("id",id);
+
+    if(res.error){
+      showToast(res.error.message);
+      return;
+    }
+
+    berhasil++;
+  }
+
+  showToast(`${berhasil} paket berhasil disimpan`);
+
+  await renderAdmin();
+  await loadData();
+};
+  
   $("#logout").onclick=async()=>{
     await sb.auth.signOut();
     adminUser=null;
