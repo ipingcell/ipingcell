@@ -171,7 +171,6 @@ function drawAdminRows(add=false){
           <input
             data-f="name"
             value="${esc(x.name)}"
-            ${isNew?"":"readonly"}
           >
         </label>
 
@@ -189,7 +188,7 @@ function drawAdminRows(add=false){
         <label>
           Masa Aktif
 
-          <select data-f="duration" ${isNew?"":"disabled"}>
+          <select data-f="duration">
             ${[
               "1 HARI",
               "2 HARI",
@@ -269,9 +268,13 @@ function drawAdminRows(add=false){
       }else{
 
         res=await sb
-          .from("packages")
-          .update({price:price})
-          .eq("id",save.dataset.save);
+  .from("packages")
+  .update({
+    name:name,
+    price:price,
+    duration:duration
+  })
+  .eq("id",save.dataset.save);
       }
 
       if(res.error){
@@ -280,7 +283,7 @@ function drawAdminRows(add=false){
 
       }else{
 
-        showToast("Harga berhasil disimpan");
+        showToast("Paket berhasil disimpan");
 
         await renderAdmin();
         await loadData();
