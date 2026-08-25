@@ -114,6 +114,237 @@ async function renderAdmin(){
     drawAdminRows(true);
   };
 }
+function drawAdminRows(add=false){
+
+    const rows=$("#adminRows");
+
+    const provider=$("#adminProvider")?.value || selectedProvider;
+
+    const search=($("#adminSearch")?.value || "")
+        .toLowerCase()
+        .trim();
+
+    let data=packages.filter(x=>x.provider_id===provider);
+
+    if(search){
+        data=data.filter(x=>
+            String(x.name||"")
+                .toLowerCase()
+                .includes(search)
+        );
+    }
+
+    if(add){
+        data.unshift({
+            id:null,
+            provider_id:provider,
+            duration:selectedDuration || "5 HARI",
+            name:"",
+            price:0,
+            tag:"Internet",
+            active:true
+        });
+    }
+
+    if(!data.length){
+        rows.innerHTML=`
+            <div style="padding:25px;text-align:center;opacity:.7">
+                Tidak ada paket.
+            </div>
+        `;
+        return;
+    }
+
+    rows.innerHTML=data.map(x=>{
+
+        const isNew=x.id==null;
+
+        const durations=[
+            "1 HARI",
+            "2 HARI",
+            "3 HARI",
+            "5 HARI",
+            "7 HARI",
+            "14 HARI",
+            "28 HARI"
+        ];
+
+        return `
+        <div class="admin-row"
+             data-admin-row="${isNew ? "new" : x.id}">
+
+            <label>
+                Nama Paket
+
+                <input
+                    data-f="name"
+                    value="${esc(x.name)}"
+                >
+            </label>
+
+            <label>
+                Harga
+
+                <input
+                    data-f="price"
+                    type="number"
+                    value="${Number(x.price||0)}"
+                >
+            </label>
+
+            <label>
+                Masa Aktif
+
+                <select data-f="duration">
+                    ${durations.map(d=>`
+                        <option
+                            value="${d}"
+                            ${d===x.duration ? "selected" : ""}
+                        >
+                            ${d}
+                        </option>
+                    `).join("")}
+                </select>
+            </label>
+
+            <div style="display:flex;gap:8px;align-items:end">
+
+                <button
+                    class="primary-btn"
+                    data-save="${isNew ? "new" : x.id}"
+                >
+                    💾 Simpan
+                </button>
+
+                <button
+                    class="danger-btn"
+                    data-del="${isNew ? "new" : x.id}"
+                >
+                    🗑️ Hapus
+                </button>
+
+            </div>
+
+        </div>
+        `;
+
+    }).join("");
+}
+
+
+$("#adminRows").onclick=async e=>{
+
+    const save=e.target.closest("[data-save]");
+
+    if(save){
+
+        const row=save.closest(".admin-row");
+
+        const name=row.querySelector('[data-f="name"]').value.trim();
+
+        const price=Number(
+            row.querySelector('[data-f="price"]').value
+        );
+
+        const duration=
+            row.querySelector('[data-f="duration"]').value;
+
+        if(!name){
+            showToast("Nama paket belum diisi");
+            return;
+        }
+
+        if(price<=0){
+            showToast("Harga harus lebih dari 0");
+            return;
+        }
+
+        const id=save.dataset.save;
+
+        let res;
+
+        if(id==="new"){
+
+            const payload={
+                provider_id:$("#adminProvider").value,
+                name:name,
+                price:price,
+                duration:duration,
+                tag:"Internet",
+                active:true
+            };
+
+            res=await sb
+                .from("packages")
+                .insert(payload);
+
+        }else{
+
+            res=await sb
+                .from("packages")
+                .update({
+                    name:name,
+                    price:price,
+                    duration:duration
+                })
+                .eq("id",id);
+
+        }
+
+        if(res.error){
+
+            showToast(res.error.message);
+
+        }else{
+
+            showToast("Paket berhasil disimpan");
+
+            await renderAdmin();
+            await loadData();
+
+        }
+
+        return;
+    }
+
+
+    const del=e.target.closest("[data-del]");
+
+    if(del){
+
+        const id=del.dataset.del;
+
+        if(id==="new"){
+            drawAdminRows();
+            return;
+        }
+
+        if(!confirm("Hapus paket ini?")){
+            return;
+        }
+
+        const res=await sb
+            .from("packages")
+            .delete()
+            .eq("id",id);
+
+        if(res.error){
+
+            showToast(res.error.message);
+
+        }else{
+
+            showToast("Paket dihapus");
+
+            await renderAdmin();
+            await loadData();
+
+        }
+
+    }
+
+};
+}
 
 function showToast(t){const x=$("#toast");x.textContent=t;x.hidden=false;setTimeout(()=>x.hidden=true,2500)}
 loadData();
