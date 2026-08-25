@@ -116,7 +116,7 @@ async function renderAdmin(){
   };
 
   $("#saveAll").onclick=async()=>{
-  const rows=$("#adminRows .admin-row");
+  const rows=document.querySelectorAll("#adminRows .admin-row");
 
   if(!rows.length){
     showToast("Tidak ada paket untuk disimpan");
