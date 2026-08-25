@@ -612,18 +612,7 @@ function drawAdminRows(addNew = false) {
             border-bottom:1px solid rgba(255,255,255,.12);
           "
         >
-          <div
-            style="
-              display:grid;
-              grid-template-columns:
-                minmax(180px,1.4fr)
-                minmax(120px,.7fr)
-                minmax(140px,.8fr)
-                auto;
-              gap:10px;
-              align-items:end;
-            "
-          >
+          <div class="iping-admin-fields">
 
             <label>
               Nama Paket
@@ -887,10 +876,98 @@ async function checkSession() {
 }
 
 /* =========================
+   RESPONSIVE ADMIN
+   ========================= */
+function installResponsiveAdminStyle() {
+  if (document.getElementById("ipingResponsiveAdminStyle")) return;
+
+  const style = document.createElement("style");
+  style.id = "ipingResponsiveAdminStyle";
+  style.textContent = `
+    .iping-admin-fields {
+      display: grid;
+      grid-template-columns:
+        minmax(180px, 1.4fr)
+        minmax(120px, .7fr)
+        minmax(140px, .8fr)
+        auto;
+      gap: 10px;
+      align-items: end;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .iping-admin-fields label {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .iping-admin-fields input,
+    .iping-admin-fields select {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 700px) {
+      .iping-admin-fields {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .iping-admin-fields label:first-child {
+        grid-column: 1 / -1;
+      }
+
+      .iping-admin-fields > div {
+        grid-column: 1 / -1;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px !important;
+        width: 100%;
+      }
+
+      .iping-admin-fields > div button {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .iping-admin-fields {
+        grid-template-columns: 1fr;
+      }
+
+      .iping-admin-fields label:first-child {
+        grid-column: auto;
+      }
+    }
+
+    #adminRows {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
+
+    .admin-row {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+/* =========================
    START APPLICATION
    ========================= */
 (async function init() {
   try {
+    installResponsiveAdminStyle();
     await checkSession();
     await loadData();
   } catch (error) {
