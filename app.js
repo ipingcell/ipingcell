@@ -1,15 +1,7 @@
-/* =========================================================
-   IPING CELL - app.js
-   Versi lengkap:
-   - Menampilkan provider, masa aktif, dan daftar paket
-   - Detail paket + WhatsApp
-   - Login Admin Supabase
-   - Edit NAMA PAKET, HARGA, dan MASA AKTIF
-   - Tambah paket
-   - Hapus paket
-   - Search paket
-   - Tidak memakai tombol "Simpan Semua"
-   ========================================================= */
+/* IPING CELL - app.js
+   Full admin + public package filtering.
+   Requires config.js to expose SUPABASE_URL and SUPABASE_ANON_KEY.
+*/
 
 const sb = window.supabase.createClient(
   window.SUPABASE_URL,
@@ -18,960 +10,461 @@ const sb = window.supabase.createClient(
 
 let providers = [];
 let packages = [];
-let selectedProvider = "axis";
-let selectedDuration = "5 HARI";
+let selectedProvider = "";
+let selectedDuration = "";
 let adminUser = null;
 
-const $ = (selector) => document.querySelector(selector);
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
 
-const money = (value) =>
-  "Rp " + Number(value || 0).toLocaleString("id-ID");
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+}[c]));
 
-const esc = (value) =>
-  String(value ?? "").replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[char]));
+const money = (v) => "Rp " + Number(v || 0).toLocaleString("id-ID");
 
 const durationOrder = [
-  "1 HARI",
-  "2 HARI",
-  "3 HARI",
-  "5 HARI",
-  "7 HARI",
-  "14 HARI",
-  "28 HARI"
+  "1 HARI","2 HARI","3 HARI","5 HARI","7 HARI","14 HARI","28 HARI"
 ];
 
-/* =========================
-   TOAST
-   ========================= */
 function showToast(message) {
-  const toast = $("#toast");
-  if (!toast) return;
-
-  toast.textContent = message;
-  toast.hidden = false;
-
-  clearTimeout(window.__ipingToastTimer);
-  window.__ipingToastTimer = setTimeout(() => {
-    toast.hidden = true;
-  }, 2500);
+  const el = $("#toast");
+  if (!el) return;
+  el.textContent = message;
+  el.hidden = false;
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => el.hidden = true, 2500);
 }
 
-/* =========================
-   LOAD DATA
-   ========================= */
 async function loadData() {
-  const providerResult = await sb
-    .from("providers")
-    .select("*")
-    .order("sort_order", { ascending: true });
+  const p = await sb.from("providers").select("*").order("sort_order", {ascending:true});
+  if (p.error) { showToast(p.error.message); return; }
 
-  if (providerResult.error) {
-    showToast("Gagal membaca provider: " + providerResult.error.message);
-    return;
-  }
+  const q = await sb.from("packages").select("*").order("sort_order", {ascending:true});
+  if (q.error) { showToast(q.error.message); return; }
 
-  const packageResult = await sb
-    .from("packages")
-    .select("*")
-    .eq("active", true)
-    .order("sort_order", { ascending: true });
+  providers = p.data || [];
+  packages = q.data || [];
 
-  if (packageResult.error) {
-    showToast("Gagal membaca paket: " + packageResult.error.message);
-    return;
-  }
-
-  providers = providerResult.data || [];
-  packages = packageResult.data || [];
-
-  if (!providers.some((item) => item.id === selectedProvider)) {
+  if (!selectedProvider || !providers.some(x => x.id === selectedProvider)) {
     selectedProvider = providers[0]?.id || "";
   }
 
-  render();
+  const durations = getDurations(selectedProvider);
+  if (!durations.includes(selectedDuration)) selectedDuration = durations[0] || "";
+
+  renderPublic();
 }
 
-/* =========================
-   PUBLIC PAGE
-   ========================= */
-function render() {
-  const providerList = $("#providerList");
-  if (!providerList) return;
-
-  providerList.innerHTML = providers
-    .map((provider) => `
-      <button
-        type="button"
-        class="provider ${provider.id === selectedProvider ? "active" : ""}"
-        data-provider="${esc(provider.id)}"
-      >
-        <span
-          class="dot"
-          style="background:${esc(provider.color || "#22d3ee")}"
-        ></span>
-        ${esc(provider.name)}
-      </button>
-    `)
-    .join("");
-
-  const availableDurations = [
-    ...new Set(
-      packages
-        .filter((item) => item.provider_id === selectedProvider)
-        .map((item) => item.duration)
-        .filter(Boolean)
-    )
-  ].sort((a, b) => {
-    const ai = durationOrder.indexOf(a);
-    const bi = durationOrder.indexOf(b);
-
-    if (ai === -1 && bi === -1) {
-      return String(a).localeCompare(String(b));
-    }
-
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-
-    return ai - bi;
+function getDurations(providerId) {
+  return [...new Set(
+    packages
+      .filter(x => x.active !== false && x.provider_id === providerId)
+      .map(x => x.duration)
+      .filter(Boolean)
+  )].sort((a,b) => {
+    const ai = durationOrder.indexOf(a), bi = durationOrder.indexOf(b);
+    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
   });
+}
 
-  if (!availableDurations.includes(selectedDuration)) {
-    selectedDuration = availableDurations[0] || "";
+function renderPublic() {
+  const providerList = $("#providerList");
+  if (providerList) {
+    providerList.innerHTML = providers.map(p => `
+      <button type="button"
+        class="provider ${p.id === selectedProvider ? "active" : ""}"
+        data-provider="${esc(p.id)}">
+        <span class="dot" style="background:${esc(p.color || "#0097ff")}"></span>
+        ${esc(p.name)}
+      </button>
+    `).join("");
   }
 
+  const durations = getDurations(selectedProvider);
   const durationList = $("#durationList");
   if (durationList) {
-    durationList.innerHTML = availableDurations
-      .map((duration) => `
-        <button
-          type="button"
-          class="duration ${duration === selectedDuration ? "active" : ""}"
-          data-duration="${esc(duration)}"
-        >
-          ${esc(duration)}
-        </button>
-      `)
-      .join("");
-  }
-
-  const provider = providers.find(
-    (item) => item.id === selectedProvider
-  );
-
-  const heroKicker = $("#heroKicker");
-  const heroTitle = $("#heroTitle");
-  const heroText = $("#heroText");
-
-  if (heroKicker) {
-    heroKicker.textContent =
-      provider?.promo_kicker || "PROMO IPING CELL";
-  }
-
-  if (heroTitle) {
-    heroTitle.textContent =
-      provider?.promo_title ||
-      `${provider?.name || "Paket"} Hemat`;
-  }
-
-  if (heroText) {
-    heroText.textContent =
-      provider?.promo_price ||
-      "Pilih paket sesuai kebutuhan Anda.";
+    durationList.innerHTML = durations.map(d => `
+      <button type="button"
+        class="duration ${d === selectedDuration ? "active" : ""}"
+        data-duration="${esc(d)}">${esc(d)}</button>
+    `).join("");
   }
 
   const list = packages
-    .filter(
-      (item) =>
-        item.provider_id === selectedProvider &&
-        item.duration === selectedDuration
-    )
-    .sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+    .filter(x => x.active !== false &&
+      x.provider_id === selectedProvider &&
+      x.duration === selectedDuration)
+    .sort((a,b) => Number(a.price||0) - Number(b.price||0));
 
-  const packageGrid = $("#packageGrid");
-
-  if (packageGrid) {
-    packageGrid.innerHTML = list
-      .map((item) => `
-        <article
-          class="package"
-          data-package="${esc(item.id)}"
-        >
-          <div class="pkg-name">${esc(item.name)}</div>
-
-          <div class="pkg-price">
-            ${money(item.price)}
-          </div>
-
-          <span class="pkg-tag">
-            ${esc(item.tag || "Internet")}
-          </span>
-
-          <div class="pkg-foot">
-            ⏱ ${esc(item.duration)} • Klik untuk detail
-          </div>
-        </article>
-      `)
-      .join("");
+  const grid = $("#packageGrid");
+  if (grid) {
+    grid.innerHTML = list.map(x => `
+      <article class="package" data-package="${esc(x.id)}">
+        <div class="pkg-name">${esc(x.name)}</div>
+        <div class="pkg-price">${money(x.price)}</div>
+        <span class="pkg-tag">${esc(x.tag || "Internet")}</span>
+        <div class="pkg-foot">⏱ ${esc(x.duration)} • Klik untuk detail</div>
+      </article>
+    `).join("");
   }
 
-  const emptyState = $("#emptyState");
-  if (emptyState) {
-    emptyState.hidden = list.length > 0;
-  }
+  const empty = $("#emptyState");
+  if (empty) empty.hidden = list.length > 0;
 }
 
-/* =========================
-   DETAIL PACKAGE
-   ========================= */
 function openDetail(id) {
-  const item = packages.find(
-    (packageItem) => String(packageItem.id) === String(id)
-  );
-
+  const item = packages.find(x => String(x.id) === String(id));
   if (!item) return;
 
-  const provider = providers.find(
-    (providerItem) => providerItem.id === item.provider_id
-  );
-
-  const phone = "6285875177710";
-
-  const message = encodeURIComponent(
+  const provider = providers.find(x => x.id === item.provider_id);
+  const msg = encodeURIComponent(
     `Halo IPING CELL, saya ingin membeli ${item.name} - ${money(item.price)} (${item.duration}).`
   );
 
-  const whatsappUrl =
-    `https://wa.me/${phone}?text=${message}`;
+  const box = $("#detailContent");
+  if (!box) return;
 
-  const detailContent = $("#detailContent");
-  if (!detailContent) return;
-
-  detailContent.innerHTML = `
+  box.innerHTML = `
     <h2>${esc(item.name)}</h2>
-
-    <p class="pkg-price">
-      ${money(item.price)}
-    </p>
-
+    <p class="pkg-price">${money(item.price)}</p>
     <p class="muted">
       Provider: ${esc(provider?.name || "")}<br>
       Masa aktif: ${esc(item.duration)}<br>
-      Keterangan: ${esc(item.tag || "Internet")}
+      ${esc(item.tag || "Internet")}
     </p>
-
-    <a
-      class="primary-btn"
-      style="display:inline-block;text-decoration:none"
-      href="${whatsappUrl}"
-      target="_blank"
-      rel="noopener"
-    >
-      PESAN VIA WHATSAPP
+    <a class="primary-btn" target="_blank" rel="noopener"
+       href="https://wa.me/6285875177710?text=${msg}">
+       PESAN VIA WHATSAPP
     </a>
   `;
 
-  const detailModal = $("#detailModal");
-  if (detailModal) {
-    detailModal.hidden = false;
-  }
+  const modal = $("#detailModal");
+  if (modal) modal.hidden = false;
 }
 
-/* =========================
-   MODAL CLOSE
-   ========================= */
-document.addEventListener("click", (event) => {
-  const closeButton = event.target.closest("[data-close]");
-
-  if (closeButton) {
-    const modal = closeButton.closest(".modal");
+/* ---------- Public events ---------- */
+document.addEventListener("click", e => {
+  const close = e.target.closest("[data-close]");
+  if (close) {
+    const modal = close.closest(".modal");
     if (modal) modal.hidden = true;
     return;
   }
 
-  if (event.target.classList.contains("modal")) {
-    event.target.hidden = true;
+  if (e.target.classList.contains("modal")) {
+    e.target.hidden = true;
     return;
   }
 
-  const providerButton =
-    event.target.closest("[data-provider]");
-
-  if (providerButton) {
-    selectedProvider = providerButton.dataset.provider;
-    render();
+  const p = e.target.closest("[data-provider]");
+  if (p) {
+    selectedProvider = p.dataset.provider;
+    const d = getDurations(selectedProvider);
+    selectedDuration = d[0] || "";
+    renderPublic();
     return;
   }
 
-  const durationButton =
-    event.target.closest("[data-duration]");
-
-  if (durationButton) {
-    selectedDuration = durationButton.dataset.duration;
-    render();
+  const d = e.target.closest("[data-duration]");
+  if (d) {
+    selectedDuration = d.dataset.duration;
+    renderPublic();
     return;
   }
 
-  const packageCard =
-    event.target.closest("[data-package]");
+  const card = e.target.closest("[data-package]");
+  if (card) openDetail(card.dataset.package);
+});
 
-  if (packageCard) {
-    openDetail(packageCard.dataset.package);
+$("#refreshBtn")?.addEventListener("click", async () => {
+  const b = $("#refreshBtn");
+  if (b) b.disabled = true;
+  try {
+    await loadData();
+    showToast("Data berhasil diperbarui");
+  } finally {
+    if (b) b.disabled = false;
   }
 });
 
-/* =========================
-   REFRESH
-   ========================= */
-const refreshButton = $("#refreshBtn");
+$("#themeBtn")?.addEventListener("click", () => {
+  document.body.classList.toggle("light");
+});
 
-if (refreshButton) {
-  refreshButton.addEventListener("click", async () => {
-    refreshButton.disabled = true;
+/* ---------- Admin login/open ---------- */
+$("#adminBtn")?.addEventListener("click", async () => {
+  const modal = $("#adminModal");
+  if (modal) modal.hidden = false;
+  if (adminUser) renderAdmin();
+});
 
-    try {
-      await loadData();
-      showToast("Data berhasil diperbarui");
-    } finally {
-      refreshButton.disabled = false;
-    }
-  });
-}
+$("#loginForm")?.addEventListener("submit", async e => {
+  e.preventDefault();
+  const email = $("#loginEmail")?.value.trim();
+  const password = $("#loginPassword")?.value || "";
+  const msg = $("#loginMsg");
 
-/* =========================
-   THEME
-   ========================= */
-const themeButton = $("#themeBtn");
-
-if (themeButton) {
-  themeButton.addEventListener("click", () => {
-    document.body.classList.toggle("light");
-  });
-}
-
-/* =========================
-   ADMIN OPEN
-   ========================= */
-const adminButton = $("#adminBtn");
-
-if (adminButton) {
-  adminButton.addEventListener("click", () => {
-    const adminModal = $("#adminModal");
-    if (!adminModal) return;
-
-    adminModal.hidden = false;
-
-    if (adminUser) {
-      renderAdmin();
-    }
-  });
-}
-
-/* =========================
-   LOGIN ADMIN
-   ========================= */
-const loginForm = $("#loginForm");
-
-if (loginForm) {
-  loginForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const email = $("#loginEmail")?.value.trim();
-    const password = $("#loginPassword")?.value || "";
-    const loginMessage = $("#loginMsg");
-
-    if (!email || !password) {
-      if (loginMessage) {
-        loginMessage.textContent =
-          "Email dan password wajib diisi.";
-      }
-      return;
-    }
-
-    if (loginMessage) {
-      loginMessage.textContent = "Sedang login...";
-    }
-
-    const result = await sb.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (result.error) {
-      if (loginMessage) {
-        loginMessage.textContent = result.error.message;
-      }
-      return;
-    }
-
-    adminUser = result.data.user;
-
-    await renderAdmin();
-  });
-}
-
-/* =========================
-   RENDER ADMIN
-   ========================= */
-async function renderAdmin() {
-  const adminContent = $("#adminContent");
-  if (!adminContent) return;
-
-  const result = await sb
-    .from("packages")
-    .select("*")
-    .order("provider_id", { ascending: true })
-    .order("sort_order", { ascending: true });
-
-  if (result.error) {
-    showToast("Gagal membaca paket admin: " + result.error.message);
+  if (!email || !password) {
+    if (msg) msg.textContent = "Email dan password wajib diisi.";
     return;
   }
 
-  packages = result.data || [];
+  if (msg) msg.textContent = "Sedang login...";
 
-  adminContent.innerHTML = `
+  const r = await sb.auth.signInWithPassword({email, password});
+  if (r.error) {
+    if (msg) msg.textContent = r.error.message;
+    return;
+  }
+
+  adminUser = r.data.user;
+  await renderAdmin();
+});
+
+async function renderAdmin() {
+  const content = $("#adminContent");
+  if (!content) return;
+
+  const r = await sb.from("packages")
+    .select("*")
+    .order("provider_id", {ascending:true})
+    .order("sort_order", {ascending:true});
+
+  if (r.error) {
+    showToast(r.error.message);
+    return;
+  }
+
+  packages = r.data || [];
+
+  content.innerHTML = `
     <h2>Admin IPING CELL</h2>
 
     <div class="admin-toolbar">
-      <button
-        type="button"
-        id="addPkg"
-        class="primary-btn"
-      >
-        + Tambah Paket
-      </button>
-
-      <button
-        type="button"
-        id="logout"
-        class="outline-btn"
-      >
-        Logout
-      </button>
+      <button type="button" id="addPkg" class="primary-btn">+ Tambah Paket</button>
+      <button type="button" id="logout" class="outline-btn">Logout</button>
     </div>
 
-    <div
-      style="
-        display:flex;
-        gap:8px;
-        flex-wrap:wrap;
-        margin:15px 0
-      "
-    >
-      <select
-        id="adminProvider"
-        class="admin-filter"
-      >
-        ${providers
-          .map(
-            (provider) => `
-              <option
-                value="${esc(provider.id)}"
-                ${provider.id === selectedProvider ? "selected" : ""}
-              >
-                ${esc(provider.name)}
-              </option>
-            `
-          )
-          .join("")}
+    <div class="admin-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin:15px 0">
+      <select id="adminProvider" class="admin-filter">
+        ${providers.map(p => `
+          <option value="${esc(p.id)}" ${p.id === selectedProvider ? "selected" : ""}>
+            ${esc(p.name)}
+          </option>
+        `).join("")}
       </select>
 
-      <input
-        id="adminSearch"
-        class="admin-filter"
-        type="search"
-        placeholder="🔍 Cari paket..."
-        autocomplete="off"
-      >
+      <select id="adminDuration" class="admin-filter">
+        <option value="">Semua Masa Aktif</option>
+        ${durationOrder.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join("")}
+      </select>
+
+      <input id="adminSearch" class="admin-filter"
+        type="search" placeholder="🔍 Cari paket..." autocomplete="off">
     </div>
 
     <div id="adminRows"></div>
-
     <div id="adminMsg" class="msg"></div>
   `;
 
-  const providerSelect = $("#adminProvider");
-  const searchInput = $("#adminSearch");
-  const addButton = $("#addPkg");
-  const logoutButton = $("#logout");
+  $("#adminProvider")?.addEventListener("change", () => {
+    selectedProvider = $("#adminProvider").value;
+    renderAdminRows();
+  });
 
-  if (providerSelect) {
-    providerSelect.addEventListener("change", () => {
-      selectedProvider = providerSelect.value;
-      drawAdminRows();
-    });
-  }
+  $("#adminDuration")?.addEventListener("change", renderAdminRows);
+  $("#adminSearch")?.addEventListener("input", renderAdminRows);
 
-  if (searchInput) {
-    searchInput.addEventListener("input", () => {
-      drawAdminRows();
-    });
-  }
+  $("#addPkg")?.addEventListener("click", () => renderAdminRows(true));
 
-  if (addButton) {
-    addButton.addEventListener("click", () => {
-      drawAdminRows(true);
-    });
-  }
+  $("#logout")?.addEventListener("click", async () => {
+    const r = await sb.auth.signOut();
+    if (r.error) return showToast(r.error.message);
+    adminUser = null;
+    $("#adminModal").hidden = true;
+    showToast("Logout berhasil");
+  });
 
-  if (logoutButton) {
-    logoutButton.addEventListener("click", async () => {
-      const result = await sb.auth.signOut();
-
-      if (result.error) {
-        showToast(result.error.message);
-        return;
-      }
-
-      adminUser = null;
-
-      const adminModal = $("#adminModal");
-      if (adminModal) {
-        adminModal.hidden = true;
-      }
-
-      showToast("Logout berhasil");
-    });
-  }
-
-  drawAdminRows();
+  renderAdminRows();
 }
 
-/* =========================
-   DRAW ADMIN ROWS
-   ========================= */
-function drawAdminRows(addNew = false) {
-  const rowsContainer = $("#adminRows");
-  if (!rowsContainer) return;
+function renderAdminRows(addNew = false) {
+  const box = $("#adminRows");
+  if (!box) return;
 
-  const provider =
-    $("#adminProvider")?.value || selectedProvider;
+  const provider = $("#adminProvider")?.value || selectedProvider;
+  const duration = $("#adminDuration")?.value || "";
+  const search = ($("#adminSearch")?.value || "").toLowerCase().trim();
 
-  const search =
-    ($("#adminSearch")?.value || "")
-      .toLowerCase()
-      .trim();
+  let data = packages.filter(x => x.provider_id === provider);
 
-  let data = packages.filter(
-    (item) => item.provider_id === provider
+  if (duration) data = data.filter(x => x.duration === duration);
+  if (search) data = data.filter(x =>
+    String(x.name || "").toLowerCase().includes(search)
   );
-
-  if (search) {
-    data = data.filter((item) =>
-      String(item.name || "")
-        .toLowerCase()
-        .includes(search)
-    );
-  }
 
   if (addNew) {
     data.unshift({
       id: null,
       provider_id: provider,
-      duration: selectedDuration || "5 HARI",
+      duration: duration || selectedDuration || "5 HARI",
       name: "",
       price: 0,
       tag: "Internet",
       active: true,
-      sort_order: 999999,
       __new: true
     });
   }
 
   if (!data.length) {
-    rowsContainer.innerHTML = `
-      <div
-        style="
-          padding:25px;
-          text-align:center;
-          opacity:.7
-        "
-      >
-        Tidak ada paket.
-      </div>
-    `;
+    box.innerHTML = `<div style="padding:25px;text-align:center;opacity:.7">Tidak ada paket.</div>`;
     return;
   }
 
-  rowsContainer.innerHTML = data
-    .map((item) => {
-      const isNew = Boolean(item.__new);
+  box.innerHTML = data.map(x => {
+    const isNew = !x.id;
+    return `
+      <div class="admin-row" data-admin-row="${isNew ? "new" : esc(x.id)}"
+        style="padding:14px 0;border-bottom:1px solid rgba(255,255,255,.12)">
 
-      return `
-        <div
-          class="admin-row"
-          data-admin-row="${isNew ? "new" : esc(item.id)}"
-          style="
-            padding:18px 0;
-            border-bottom:1px solid rgba(255,255,255,.12);
-          "
-        >
-          <div class="iping-admin-fields">
+        <div class="admin-package-info"
+          style="display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(110px,.8fr) minmax(130px,.8fr) auto;gap:8px;align-items:end">
 
-            <label>
-              Nama Paket
+          <label>
+            Nama Paket
+            <input type="text" data-field="name"
+              value="${esc(x.name)}" placeholder="Nama paket">
+          </label>
 
-              <input
-                type="text"
-                data-field="name"
-                value="${esc(item.name)}"
-                placeholder="Contoh: AXIS 10GB"
-              >
-            </label>
+          <label>
+            Harga
+            <input type="number" min="0" step="1000"
+              inputmode="numeric" data-field="price"
+              value="${Number(x.price || 0)}" placeholder="15000">
+          </label>
 
-            <label>
-              Harga
+          <label>
+            Masa Aktif
+            <select data-field="duration">
+              ${durationOrder.map(d => `
+                <option value="${esc(d)}" ${d === x.duration ? "selected" : ""}>
+                  ${esc(d)}
+                </option>
+              `).join("")}
+            </select>
+          </label>
 
-              <input
-                type="number"
-                min="0"
-                step="1000"
-                data-field="price"
-                value="${Number(item.price || 0)}"
-                placeholder="15000"
-              >
-            </label>
+          <div class="admin-actions" style="display:flex;gap:8px">
+            <button type="button" class="primary-btn"
+              data-action="save" data-id="${isNew ? "new" : esc(x.id)}">
+              💾 Simpan
+            </button>
 
-            <label>
-              Masa Aktif
-
-              <select data-field="duration">
-                ${durationOrder
-                  .map(
-                    (duration) => `
-                      <option
-                        value="${esc(duration)}"
-                        ${duration === item.duration ? "selected" : ""}
-                      >
-                        ${esc(duration)}
-                      </option>
-                    `
-                  )
-                  .join("")}
-              </select>
-            </label>
-
-            <div
-              style="
-                display:flex;
-                gap:8px;
-                align-items:end;
-                flex-wrap:wrap;
-              "
-            >
-              <button
-                type="button"
-                class="primary-btn"
-                data-action="save"
-                data-id="${isNew ? "new" : esc(item.id)}"
-              >
-                💾 Simpan
-              </button>
-
-              <button
-                type="button"
-                class="danger-btn"
-                data-action="delete"
-                data-id="${isNew ? "new" : esc(item.id)}"
-              >
-                🗑 Hapus
-              </button>
-            </div>
-
+            <button type="button" class="danger-btn"
+              data-action="delete" data-id="${isNew ? "new" : esc(x.id)}">
+              🗑 Hapus
+            </button>
           </div>
         </div>
-      `;
-    })
-    .join("");
+      </div>
+    `;
+  }).join("");
 }
 
-/* =========================
-   ADMIN SAVE / DELETE
-   ========================= */
-const adminRowsContainer = $("#adminRows");
+document.addEventListener("click", async e => {
+  const button = e.target.closest("[data-action]");
+  if (!button) return;
 
-document.addEventListener("click", async (event) => {
-  const actionButton =
-    event.target.closest("[data-action]");
-
-  if (!actionButton) return;
-
-  const action = actionButton.dataset.action;
-  const id = actionButton.dataset.id;
-
-  const row = actionButton.closest(".admin-row");
+  const row = button.closest(".admin-row");
   if (!row) return;
 
-  if (action === "save") {
-    await saveAdminRow(row, id);
-    return;
+  if (button.dataset.action === "save") {
+    await saveAdminRow(row, button.dataset.id);
   }
 
-  if (action === "delete") {
-    await deleteAdminRow(row, id);
+  if (button.dataset.action === "delete") {
+    await deleteAdminRow(row, button.dataset.id);
   }
 });
 
-/* =========================
-   SAVE ONE PACKAGE
-   ========================= */
 async function saveAdminRow(row, id) {
-  const nameInput = row.querySelector(
-    '[data-field="name"]'
-  );
+  const name = row.querySelector('[data-field="name"]')?.value.trim() || "";
+  const price = Number(row.querySelector('[data-field="price"]')?.value || 0);
+  const duration = row.querySelector('[data-field="duration"]')?.value || "";
 
-  const priceInput = row.querySelector(
-    '[data-field="price"]'
-  );
+  if (!name) return showToast("Nama paket belum diisi");
+  if (price <= 0) return showToast("Harga harus lebih dari 0");
+  if (!duration) return showToast("Masa aktif belum dipilih");
 
-  const durationInput = row.querySelector(
-    '[data-field="duration"]'
-  );
-
-  const name = nameInput?.value.trim() || "";
-  const price = Number(priceInput?.value || 0);
-  const duration =
-    durationInput?.value || "5 HARI";
-
-  if (!name) {
-    showToast("Nama paket belum diisi");
-    nameInput?.focus();
-    return;
+  const button = row.querySelector('[data-action="save"]');
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Menyimpan...";
   }
 
-  if (!price || price < 0) {
-    showToast("Harga harus lebih dari 0");
-    priceInput?.focus();
-    return;
+  let r;
+
+  if (id === "new") {
+    r = await sb.from("packages").insert({
+      provider_id: $("#adminProvider")?.value || selectedProvider,
+      name,
+      price,
+      duration,
+      tag: "Internet",
+      active: true,
+      sort_order: 999999
+    });
+  } else {
+    r = await sb.from("packages").update({
+      name,
+      price,
+      duration
+    }).eq("id", id);
   }
 
-  const providerId =
-    $("#adminProvider")?.value || selectedProvider;
-
-  const saveButton =
-    row.querySelector('[data-action="save"]');
-
-  if (saveButton) {
-    saveButton.disabled = true;
-    saveButton.textContent = "Menyimpan...";
-  }
-
-  let result;
-
-  try {
-    if (id === "new") {
-      const payload = {
-        provider_id: providerId,
-        duration,
-        name,
-        price,
-        tag: "Internet",
-        active: true,
-        sort_order: 999999
-      };
-
-      result = await sb
-        .from("packages")
-        .insert(payload);
-    } else {
-      result = await sb
-        .from("packages")
-        .update({
-          name,
-          price,
-          duration
-        })
-        .eq("id", id);
+  if (r.error) {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "💾 Simpan";
     }
-  } finally {
-    if (saveButton) {
-      saveButton.disabled = false;
-      saveButton.textContent = "💾 Simpan";
-    }
-  }
-
-  if (result.error) {
-    showToast(
-      "Gagal menyimpan: " + result.error.message
-    );
+    showToast("Gagal menyimpan: " + r.error.message);
     return;
   }
 
-  showToast(
-    id === "new"
-      ? "Paket berhasil ditambahkan"
-      : "Paket berhasil diperbarui"
-  );
-
+  showToast(id === "new" ? "Paket berhasil ditambahkan" : "Paket berhasil disimpan");
   await renderAdmin();
   await loadData();
 }
 
-/* =========================
-   DELETE ONE PACKAGE
-   ========================= */
 async function deleteAdminRow(row, id) {
   if (id === "new") {
-    drawAdminRows();
+    renderAdminRows();
     return;
   }
 
-  const name =
-    row.querySelector('[data-field="name"]')?.value ||
-    "paket ini";
+  const name = row.querySelector('[data-field="name"]')?.value || "paket ini";
+  if (!confirm(`Hapus ${name}?`)) return;
 
-  const confirmed = confirm(
-    `Hapus ${name}?`
-  );
+  const r = await sb.from("packages").delete().eq("id", id);
 
-  if (!confirmed) return;
-
-  const deleteButton =
-    row.querySelector('[data-action="delete"]');
-
-  if (deleteButton) {
-    deleteButton.disabled = true;
-    deleteButton.textContent = "Menghapus...";
-  }
-
-  const result = await sb
-    .from("packages")
-    .delete()
-    .eq("id", id);
-
-  if (result.error) {
-    showToast(
-      "Gagal menghapus: " + result.error.message
-    );
-
-    if (deleteButton) {
-      deleteButton.disabled = false;
-      deleteButton.textContent = "🗑 Hapus";
-    }
-
+  if (r.error) {
+    showToast("Gagal menghapus: " + r.error.message);
     return;
   }
 
   showToast("Paket berhasil dihapus");
-
   await renderAdmin();
   await loadData();
 }
 
-/* =========================
-   AUTH SESSION
-   ========================= */
-async function checkSession() {
-  const result = await sb.auth.getSession();
-
-  if (result.error) return;
-
-  adminUser = result.data.session?.user || null;
+async function init() {
+  const session = await sb.auth.getSession();
+  if (!session.error) adminUser = session.data.session?.user || null;
+  await loadData();
 }
 
-/* =========================
-   RESPONSIVE ADMIN
-   ========================= */
-function installResponsiveAdminStyle() {
-  if (document.getElementById("ipingResponsiveAdminStyle")) return;
-
-  const style = document.createElement("style");
-  style.id = "ipingResponsiveAdminStyle";
-  style.textContent = `
-    .iping-admin-fields {
-      display: grid;
-      grid-template-columns:
-        minmax(180px, 1.4fr)
-        minmax(120px, .7fr)
-        minmax(140px, .8fr)
-        auto;
-      gap: 10px;
-      align-items: end;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .iping-admin-fields label {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .iping-admin-fields input,
-    .iping-admin-fields select {
-      width: 100%;
-      min-width: 0;
-      box-sizing: border-box;
-    }
-
-    @media (max-width: 700px) {
-      .iping-admin-fields {
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-
-      .iping-admin-fields label:first-child {
-        grid-column: 1 / -1;
-      }
-
-      .iping-admin-fields > div {
-        grid-column: 1 / -1;
-        display: grid !important;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px !important;
-        width: 100%;
-      }
-
-      .iping-admin-fields > div button {
-        width: 100%;
-        min-width: 0;
-      }
-    }
-
-    @media (max-width: 430px) {
-      .iping-admin-fields {
-        grid-template-columns: 1fr;
-      }
-
-      .iping-admin-fields label:first-child {
-        grid-column: auto;
-      }
-    }
-
-    #adminRows {
-      width: 100%;
-      max-width: 100%;
-      overflow-x: hidden;
-      box-sizing: border-box;
-    }
-
-    .admin-row {
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
-      overflow: hidden;
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-/* =========================
-   START APPLICATION
-   ========================= */
-(async function init() {
-  try {
-    installResponsiveAdminStyle();
-    await checkSession();
-    await loadData();
-  } catch (error) {
-    console.error(error);
-    showToast("Terjadi kesalahan saat memuat aplikasi");
-  }
-})();
+init().catch(err => {
+  console.error(err);
+  showToast("Gagal memuat aplikasi");
+});
