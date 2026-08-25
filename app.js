@@ -76,7 +76,7 @@ async function renderAdmin(){
 
     <div class="admin-toolbar">
       <button id="addPkg" class="primary-btn">+ Tambah Paket</button>
-      +<button id="logout" class="outline-btn">Logout</button>
+      <button id="logout" class="outline-btn">Logout</button>
     </div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:15px 0">
