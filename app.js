@@ -36,24 +36,49 @@ function showToast(message) {
   window.__toastTimer = setTimeout(() => el.hidden = true, 2500);
 }
 
-async function loadData() {
-  const p = await sb.from("providers").select("*").order("sort_order", {ascending:true});
-  if (p.error) { showToast(p.error.message); return; }
+async function loadData(){
+  try {
+    const p = await sb
+      .from("providers")
+      .select("*")
+      .order("sort_order", {ascending:true});
 
-  const q = await sb.from("packages").select("*").order("sort_order", {ascending:true});
-  if (q.error) { showToast(q.error.message); return; }
+    if (p.error) {
+      showToast("⚠️ Server IPING CELL sedang tidak tersedia. Silakan coba lagi.");
+      console.error("Providers:", p.error);
+      return;
+    }
 
-  providers = p.data || [];
-  packages = q.data || [];
+    const q = await sb
+      .from("packages")
+      .select("*")
+      .order("sort_order", {ascending:true});
 
-  if (!selectedProvider || !providers.some(x => x.id === selectedProvider)) {
-    selectedProvider = providers[0]?.id || "";
+    if (q.error) {
+      showToast("⚠️ Data paket sedang tidak tersedia. Silakan coba lagi.");
+      console.error("Packages:", q.error);
+      return;
+    }
+
+    providers = p.data || [];
+    packages = q.data || [];
+
+    if (!selectedProvider || !providers.some(x => x.id === selectedProvider)) {
+      selectedProvider = providers[0]?.id || "";
+    }
+
+    const durations = getDurations(selectedProvider);
+
+    if (!durations.includes(selectedDuration)) {
+      selectedDuration = durations[0] || "";
+    }
+
+    renderPublic();
+
+  } catch (error) {
+    console.error("Koneksi Supabase:", error);
+    showToast("⚠️ Koneksi server sedang bermasalah. Silakan coba lagi.");
   }
-
-  const durations = getDurations(selectedProvider);
-  if (!durations.includes(selectedDuration)) selectedDuration = durations[0] || "";
-
-  renderPublic();
 }
 
 function getDurations(providerId) {
