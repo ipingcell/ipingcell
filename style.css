@@ -534,3 +534,48 @@ html,body{
     grid-template-columns: 1fr !important;
   }
 }
+
+/* =========================================
+   IPING CELL — ADMIN PANEL V3.1
+   Fix: package list must actually scroll
+   ========================================= */
+.admin-card{
+  height:min(88vh,900px) !important;
+  max-height:min(88vh,900px) !important;
+  overflow:hidden !important;
+}
+
+.admin-card #adminContent{
+  flex:1 1 0 !important;
+  min-height:0 !important;
+  height:auto !important;
+  overflow:hidden !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+
+.admin-card #adminRows{
+  flex:1 1 0 !important;
+  min-height:0 !important;
+  height:0 !important;
+  max-height:none !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior:contain !important;
+  touch-action:pan-y !important;
+  padding-right:6px !important;
+}
+
+@media(max-width:768px){
+  .admin-card{
+    height:88vh !important;
+    max-height:88vh !important;
+  }
+  .admin-card #adminRows{
+    height:0 !important;
+    flex:1 1 0 !important;
+    max-height:none !important;
+    touch-action:pan-y !important;
+  }
+}
