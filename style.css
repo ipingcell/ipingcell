@@ -417,3 +417,120 @@ html,body{
     max-height: 46vh;
   }
 }
+
+/* =========================================
+   IPING CELL — ADMIN PANEL V3
+   Professional mobile admin experience
+   ========================================= */
+.admin-card .admin-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  padding: 4px 0 12px;
+  margin-bottom: 6px;
+  background: inherit;
+}
+
+.admin-card .admin-toolbar button {
+  min-height: 52px;
+  font-weight: 700;
+  border-radius: 14px;
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+
+.admin-card .admin-toolbar #addPkg {
+  box-shadow: 0 8px 20px rgba(0, 160, 230, .20);
+}
+
+.admin-card .admin-toolbar button:active {
+  transform: scale(.98);
+}
+
+/* Package rows become clean cards */
+.admin-card #adminRows .admin-row {
+  background: rgba(248, 252, 255, .96) !important;
+  border: 1px solid rgba(120, 155, 175, .22) !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  margin: 0 2px 12px 0 !important;
+  box-shadow: 0 5px 16px rgba(20, 60, 80, .06);
+}
+
+.admin-card #adminRows .admin-package-info {
+  gap: 12px !important;
+}
+
+.admin-card #adminRows label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #66758a;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-card #adminRows input,
+.admin-card #adminRows select {
+  min-height: 50px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+/* Make save/delete actions easy to tap */
+.admin-card #adminRows .admin-actions {
+  margin-top: 2px;
+}
+
+.admin-card #adminRows .admin-actions button {
+  min-height: 50px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.admin-card #adminRows .admin-actions .danger-btn {
+  opacity: .92;
+}
+
+/* Keep search/filter controls polished */
+.admin-card .admin-filters {
+  gap: 10px !important;
+}
+
+.admin-card .admin-filter {
+  min-height: 50px;
+  border-radius: 12px;
+}
+
+/* Clear visual separation before package list */
+.admin-card #adminRows {
+  border-top: 1px solid rgba(120, 155, 175, .20);
+  padding-top: 12px;
+}
+
+/* Success/error toast remains visible above the admin modal */
+.toast {
+  z-index: 10000 !important;
+}
+
+@media (max-width: 768px) {
+  .admin-card .admin-toolbar {
+    position: sticky;
+    top: 0;
+    padding-top: 2px;
+  }
+
+  .admin-card #adminRows .admin-row {
+    border-radius: 15px !important;
+    padding: 14px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-card #adminRows .admin-row {
+    padding: 12px !important;
+  }
+
+  .admin-card #adminRows .admin-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
