@@ -3,72 +3,81 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>IPING CELL — Paket Internet</title>
+  <meta name="theme-color" content="#0ea5e9">
+  <meta name="description" content="IPING CELL — layanan pulsa, paket internet, token listrik, top up e-wallet, transfer, tarik tunai dan kebutuhan digital di Sitanggal.">
+  <title>IPING CELL — Cepat • Aman • Terpercaya</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brand-dot"></span> IPING CELL</div>
+    <a class="brand" href="#beranda" aria-label="IPING CELL Beranda">
+      <img src="logo-iping-cell-transparent.png" alt="Logo IPING CELL">
+      <span><b>IPING CELL</b><small>Cepat • Aman • Terpercaya</small></span>
+    </a>
+    <nav class="nav" aria-label="Navigasi utama">
+      <a href="#beranda">Beranda</a><a href="#layanan">Layanan</a><a href="#harga">Harga</a><a href="#tentang">Tentang</a>
+    </nav>
     <div class="top-actions">
-      <button id="themeBtn" class="icon-btn" title="Tema">☾</button>
+      <button id="themeBtn" class="icon-btn" title="Tema" aria-label="Ubah tema">☾</button>
       <button id="adminBtn" class="outline-btn">Admin</button>
     </div>
   </header>
 
-  <main class="layout">
-    <aside class="sidebar">
-      <div class="side-title">PILIH PROVIDER</div>
-      <div id="providerList"></div>
-      <div class="side-info">Harga dapat berubah sewaktu-waktu.</div>
-    </aside>
-
-    <section class="content">
-      <div class="hero">
-        <div>
-          <small id="heroKicker">PROMO IPING CELL</small>
-          <h1 id="heroTitle">Paket Internet Hemat</h1>
-          <p id="heroText">Pilih provider dan paket sesuai kebutuhan Anda.</p>
+  <main id="beranda">
+    <section class="hero-wrap">
+      <div class="hero-copy">
+        <span class="eyebrow">SOLUSI KEBUTUHAN DIGITAL</span>
+        <h1>Butuh Pulsa, Kuota & Layanan Digital?<br><strong>IPING CELL Aja.</strong></h1>
+        <p>Transaksi mudah, cepat, dan terpercaya untuk kebutuhan digital sehari-hari di Sitanggal dan sekitarnya.</p>
+        <div class="hero-actions">
+          <a class="primary-btn hero-btn" target="_blank" rel="noopener" href="https://wa.me/6285875177710?text=Halo%20IPING%20CELL%2C%20saya%20ingin%20tanya%20produk.5">Chat WhatsApp</a>
+          <a class="ghost-btn" href="#harga">Lihat Daftar Harga →</a>
         </div>
-        <div class="hero-badge">
-  <img src="logo-iping-cell-transparent.png" alt="IPING CELL">
-</div>
+        <div class="trust-row"><span>✓ Proses cepat</span><span>✓ Harga jelas</span><span>✓ Pelayanan ramah</span></div>
       </div>
-
-      <div class="toolbar">
-        <div id="durationList" class="durations"></div>
-        <button id="refreshBtn" class="outline-btn">↻ Refresh</button>
+      <div class="hero-card">
+        <div class="hero-glow"></div>
+        <img src="logo-iping-cell-transparent.png" alt="IPING CELL">
+        <div><b>IPING CELL</b><small>Teman Kebutuhan Digital Anda</small></div>
       </div>
+    </section>
 
-      <div id="packageGrid" class="package-grid"></div>
-      <div id="emptyState" class="empty" hidden>Tidak ada paket pada masa aktif ini.</div>
+    <section id="layanan" class="section">
+      <div class="section-head"><div><span class="eyebrow">LAYANAN</span><h2>Semua kebutuhan digital, satu tempat.</h2></div><p>Praktis untuk kebutuhan harian.</p></div>
+      <div class="service-grid">
+        <div class="service-card"><span>📱</span><b>Pulsa & Kuota</b><small>Semua operator</small></div>
+        <div class="service-card"><span>⚡</span><b>Token Listrik</b><small>Praktis & cepat</small></div>
+        <div class="service-card"><span>💳</span><b>Top Up E-Wallet</b><small>Berbagai layanan</small></div>
+        <div class="service-card"><span>🎮</span><b>Voucher Game</b><small>Top up game</small></div>
+        <div class="service-card"><span>💸</span><b>Transfer</b><small>Kirim uang dengan mudah</small></div>
+        <div class="service-card"><span>🏧</span><b>Tarik Tunai</b><small>Layanan transaksi tunai</small></div>
+      </div>
+    </section>
+
+    <section id="harga" class="catalog section">
+      <div class="section-head"><div><span class="eyebrow">DAFTAR HARGA</span><h2>Pilih provider & paketmu.</h2></div><button id="refreshBtn" class="outline-btn">↻ Refresh</button></div>
+      <div class="catalog-layout">
+        <aside class="provider-panel"><div class="side-title">PILIH PROVIDER</div><div id="providerList"></div><div class="side-info">Pilih operator untuk melihat paket.</div></aside>
+        <section class="package-area">
+          <div class="toolbar"><div id="durationList" class="durations"></div></div>
+          <div id="packageGrid" class="package-grid"></div>
+          <div id="emptyState" class="empty" hidden>Tidak ada paket pada masa aktif ini.</div>
+        </section>
+      </div>
+    </section>
+
+    <section id="tentang" class="about section">
+      <div><span class="eyebrow">TENTANG IPING CELL</span><h2>Cepat. Aman. Terpercaya.</h2></div>
+      <div><p><b>IPING CELL</b> adalah pusat layanan telekomunikasi dan kebutuhan digital di Sitanggal, Larangan, Brebes. Kami hadir untuk membantu kebutuhan pulsa, internet, pembayaran digital, transfer, tarik tunai, dan layanan handphone dengan pelayanan yang praktis dan ramah.</p><div class="outlet-info"><span>📍 Sitanggal, Larangan, Brebes</span><span>🕘 Senin–Sabtu 09.00–21.00 WIB</span><span>🕡 Minggu 18.30–21.00 WIB</span></div></div>
     </section>
   </main>
 
-  <div id="detailModal" class="modal" hidden>
-    <div class="modal-card">
-      <button type="button" class="close" data-close onclick="this.closest('.modal').hidden=true">×</button>
-      <div id="detailContent"></div>
-    </div>
-  </div>
+  <footer><div><b>IPING CELL</b><span> Cepat • Aman • Terpercaya</span></div><a target="_blank" rel="noopener" href="https://wa.me/6285875177710">Chat WhatsApp</a></footer>
 
-  <div id="adminModal" class="modal" hidden>
-    <div class="modal-card admin-card">
-      <button type="button" class="close" data-close onclick="this.closest('.modal').hidden=true">×</button>
-      <div id="adminContent">
-        <h2>Admin IPING CELL</h2>
-        <p class="muted">Login untuk mengelola daftar paket dan harga.</p>
-        <form id="loginForm">
-          <label>Email<input id="loginEmail" type="email" required autocomplete="username"></label>
-          <label>Password<input id="loginPassword" type="password" required autocomplete="current-password"></label>
-          <button class="primary-btn" type="submit">Login Admin</button>
-          <div id="loginMsg" class="msg"></div>
-        </form>
-      </div>
-    </div>
-  </div>
-
+  <div id="detailModal" class="modal" hidden><div class="modal-card"><button type="button" class="close" data-close>×</button><div id="detailContent"></div></div></div>
+  <div id="adminModal" class="modal" hidden><div class="modal-card admin-card"><button type="button" class="close" data-close>×</button><div id="adminContent"><h2>Admin IPING CELL</h2><p class="muted">Login untuk mengelola daftar paket dan harga.</p><form id="loginForm"><label>Email<input id="loginEmail" type="email" required autocomplete="username"></label><label>Password<input id="loginPassword" type="password" required autocomplete="current-password"></label><button class="primary-btn" type="submit">Login Admin</button><div id="loginMsg" class="msg"></div></form></div></div></div>
   <div id="toast" class="toast" hidden></div>
   <script src="app.js"></script>
 </body>
