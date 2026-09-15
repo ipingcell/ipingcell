@@ -184,4 +184,135 @@ html,body{
 @media(max-width:380px){
   .package-grid{grid-template-columns:1fr;}
 }
-a}
+
+/* =========================================================
+   IPING CELL — ADMIN PANEL V2.1 MOBILE FIX
+   CSS-only patch: app.js & Supabase tetap aman
+   ========================================================= */
+
+.admin-card {
+  width: min(760px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.admin-card #adminRows,
+.admin-card .admin-row,
+.admin-card .admin-package-info,
+.admin-card label {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-card .admin-package-info {
+  display: grid !important;
+  grid-template-columns: minmax(200px, 1.4fr) minmax(130px, .8fr) minmax(150px, .9fr) auto !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.admin-card .admin-package-info input,
+.admin-card .admin-package-info select,
+.admin-card .admin-filter {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-card .admin-actions {
+  display: flex !important;
+  gap: 8px !important;
+  min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .admin-card {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    padding: 20px 16px !important;
+    overflow-x: hidden !important;
+  }
+
+  .admin-card .admin-toolbar {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .admin-card .admin-toolbar button {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .admin-card .admin-filters {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 15px 0 !important;
+  }
+
+  .admin-card .admin-filter {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .admin-card #adminRows {
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .admin-card .admin-row {
+    width: 100% !important;
+    padding: 14px 0 !important;
+    overflow: hidden !important;
+  }
+
+  .admin-card .admin-package-info {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 9px !important;
+    width: 100% !important;
+  }
+
+  .admin-card .admin-package-info label {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .admin-card .admin-package-info input,
+  .admin-card .admin-package-info select {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .admin-card .admin-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .admin-card .admin-actions button {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-card {
+    padding: 16px 12px !important;
+  }
+
+  .admin-card .admin-toolbar {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-card .admin-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+2
