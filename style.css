@@ -105,3 +105,83 @@ body:not(.light){--bg:#f5fbff}
   #packageGrid .package{padding:11px}
   #packageGrid .pkg-price{font-size:18px}
 }
+
+/* =========================================================
+   IPING CELL V2.3 — Mobile horizontal overflow fix
+   Keep only provider/duration chips horizontally scrollable.
+   ========================================================= */
+html,body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+/* Prevent grid/flex children from forcing the whole page wider */
+.hero-wrap,
+.section,
+.catalog-layout,
+.catalog-layout > *,
+.package-grid,
+.about,
+.topbar{
+  min-width:0;
+  max-width:100%;
+}
+
+@media(max-width:950px){
+  .catalog-layout{width:100%;min-width:0;overflow:hidden}
+  .provider-panel{width:100%;min-width:0;overflow:hidden}
+  .provider-panel #providerList{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    overflow-x:auto;
+    overflow-y:hidden;
+    flex-wrap:nowrap;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .provider-panel #providerList::-webkit-scrollbar{display:none}
+  .provider-panel .provider{
+    flex:0 0 auto;
+    max-width:none;
+  }
+  .durations{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    flex-wrap:nowrap;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .durations::-webkit-scrollbar{display:none}
+  .duration{flex:0 0 auto}
+  .package-grid{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+  }
+  #packageGrid .package{min-width:0;max-width:100%;}
+}
+
+@media(max-width:600px){
+  .hero-wrap,
+  .section{width:100%;}
+  .hero-copy,
+  .hero-card,
+  .service-grid,
+  .catalog,
+  .about{min-width:0;max-width:100%;}
+  .hero-copy h1,
+  .hero-copy p,
+  .section-head h2,
+  .section-head p,
+  .about h2,
+  .about p{overflow-wrap:anywhere;}
+  .package-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+
+@media(max-width:380px){
+  .package-grid{grid-template-columns:1fr;}
+}
+a}
