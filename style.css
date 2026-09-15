@@ -11,3 +11,52 @@ body.light{--bg:#f5fbff;--panel:#fff;--panel2:#e8f7ff;--text:#102033;--muted:#64
 body:not(.light){--bg:#f5fbff}
 @media(max-width:950px){.nav{display:none}.hero-wrap{grid-template-columns:1fr;padding-top:45px}.hero-card{min-height:270px}.service-grid{grid-template-columns:repeat(3,1fr)}.catalog-layout{grid-template-columns:1fr}.provider-panel{padding:10px}.provider-panel #providerList{display:flex;overflow:auto;gap:4px}.provider{width:auto;white-space:nowrap}.side-info{display:none}.package-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.about{grid-template-columns:1fr;gap:20px}}
 @media(max-width:600px){.topbar{height:68px;padding:0 14px}.brand img{width:38px;height:38px}.brand b{font-size:16px}.brand small{font-size:8px}.hero-wrap{padding:38px 14px 35px}.hero-copy h1{font-size:36px;letter-spacing:-1.4px}.hero-copy p{font-size:14px}.hero-actions{flex-direction:column;align-items:stretch}.hero-actions>*{width:100%}.hero-card{min-height:230px}.hero-card img{width:150px;height:150px}.section{padding:38px 14px}.section-head{align-items:start;flex-direction:column}.section-head h2{font-size:25px}.service-grid{grid-template-columns:repeat(2,1fr)}.service-card{min-height:120px;padding:16px 13px}.package-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.package{padding:14px;min-height:132px}.pkg-name{font-size:13px}.pkg-price{font-size:20px}.pkg-foot{font-size:9px}.about{margin:0 14px 35px;padding:25px 20px}.about h2{font-size:27px}.outlet-info{flex-direction:column}footer{padding:20px 14px;gap:12px}}
+
+
+/* IPING CELL V2.1 - Mobile & responsive safety fixes */
+html,body{max-width:100%;overflow-x:hidden}
+.hero-wrap{overflow:hidden}
+.hero-card{isolation:isolate}
+.hero-card img{max-width:100%;max-height:100%;}
+@media(max-width:600px){
+  body{overflow-x:hidden}
+  .topbar{position:sticky;top:0;z-index:50}
+  .hero-wrap{display:block;position:relative;padding:32px 16px 28px;min-height:auto;background:linear-gradient(180deg,#f5fbff 0%,#eaf8ff 100%);}
+  .hero-copy{position:relative;z-index:2;width:100%;}
+  .eyebrow{font-size:10px;letter-spacing:1.2px}
+  .hero-copy h1{font-size:34px;line-height:1.08;letter-spacing:-1.2px;margin:10px 0 14px;max-width:100%;}
+  .hero-copy p{font-size:14px;line-height:1.55;max-width:100%;}
+  .hero-actions{display:flex;flex-direction:column;gap:9px;margin-top:20px;align-items:stretch}
+  .hero-actions a{width:100%;min-height:46px}
+  .trust-row{gap:8px 12px;margin-top:16px;font-size:11px}
+  .hero-card{margin-top:24px;min-height:170px;height:170px;border-radius:22px;background:linear-gradient(145deg,#dff5ff,#fff);}
+  .hero-card img{width:105px;height:105px;object-fit:contain}
+  .hero-card b{font-size:18px}
+  .hero-card small{font-size:10px}
+  .hero-glow{width:150px;height:150px;filter:blur(45px)}
+  .section{padding:34px 16px}
+  .service-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .service-card{min-height:108px;padding:14px 12px;border-radius:14px}
+  .service-card span{font-size:22px;margin-bottom:9px}
+  .service-card b{font-size:13px}
+  .service-card small{font-size:10px}
+  .catalog{padding-top:30px}
+  .catalog-layout{grid-template-columns:1fr;gap:12px}
+  .provider-panel{overflow:hidden}
+  .provider-panel #providerList{display:flex;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .provider-panel #providerList::-webkit-scrollbar{display:none}
+  .provider{flex:0 0 auto;padding:9px 11px;font-size:12px}
+  .package-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .package{min-height:125px;padding:13px;border-radius:14px}
+  .pkg-name{font-size:12px}
+  .pkg-price{font-size:19px;margin:7px 0}
+  .pkg-tag{font-size:9px}
+  .pkg-foot{font-size:9px}
+  .about{margin:0 16px 30px;padding:23px 18px;border-radius:20px}
+  footer{padding:18px 16px;flex-direction:column;align-items:stretch;text-align:center}
+}
+@media(min-width:601px) and (max-width:950px){
+  .hero-wrap{grid-template-columns:1fr .55fr;gap:22px;padding:45px 20px}
+  .hero-card{min-height:280px}
+  .hero-card img{width:170px;height:170px}
+}
