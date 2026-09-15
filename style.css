@@ -579,3 +579,57 @@ html,body{
     touch-action:pan-y !important;
   }
 }
+
+
+/* =========================================
+   IPING CELL — ADMIN PANEL V3.2
+   Focus: clear internal scroll + package snap
+   ========================================= */
+.admin-card #adminRows{
+  position:relative !important;
+  scroll-snap-type:y proximity !important;
+  scroll-padding-top:8px !important;
+  padding:12px 6px 18px 0 !important;
+  scrollbar-width:thin !important;
+}
+
+.admin-card #adminRows .admin-row{
+  scroll-snap-align:start !important;
+  scroll-snap-stop:normal !important;
+  scroll-margin-top:8px !important;
+  box-sizing:border-box !important;
+}
+
+/* Make the scroll area visually obvious without changing the page width. */
+.admin-card #adminRows::-webkit-scrollbar{
+  width:7px;
+}
+
+.admin-card #adminRows::-webkit-scrollbar-thumb{
+  background:rgba(100,120,140,.35);
+  border-radius:99px;
+}
+
+.admin-card #adminRows::-webkit-scrollbar-track{
+  background:rgba(100,120,140,.08);
+  border-radius:99px;
+}
+
+/* Keep the heading, toolbar and filters outside the scrolling list. */
+.admin-card #adminContent > h2,
+.admin-card #adminContent > .admin-toolbar,
+.admin-card #adminContent > .admin-filters{
+  flex:0 0 auto !important;
+}
+
+@media(max-width:768px){
+  .admin-card #adminRows{
+    scroll-snap-type:y proximity !important;
+    padding:12px 5px 22px 0 !important;
+  }
+
+  .admin-card #adminRows .admin-row{
+    scroll-margin-top:8px !important;
+    margin-right:1px !important;
+  }
+}
