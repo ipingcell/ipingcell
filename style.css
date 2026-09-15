@@ -315,4 +315,31 @@ html,body{
     grid-template-columns: 1fr !important;
   }
 }
-2
+
+/* Admin Panel V2.2 - fix parent grid width on mobile/desktop */
+.admin-card #adminRows .admin-row {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.admin-card #adminRows .admin-package-info {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 700px) {
+  .admin-card #adminRows .admin-row {
+    display: block !important;
+  }
+
+  .admin-card #adminRows .admin-package-info label,
+  .admin-card #adminRows .admin-package-info input,
+  .admin-card #adminRows .admin-package-info select {
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+  }
+}
