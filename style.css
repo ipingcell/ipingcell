@@ -633,3 +633,62 @@ html,body{
     margin-right:1px !important;
   }
 }
+
+/* =========================================
+   IPING CELL — ADMIN PANEL V3.3
+   Final mobile scroll refinement
+   ========================================= */
+.admin-card #adminContent{
+  min-height:0 !important;
+  height:100% !important;
+  box-sizing:border-box !important;
+}
+
+/* The package list is the ONLY scrolling region. */
+.admin-card #adminRows{
+  scroll-snap-type:y mandatory !important;
+  scroll-behavior:smooth !important;
+  overscroll-behavior-y:contain !important;
+  scrollbar-gutter:stable !important;
+}
+
+.admin-card #adminRows .admin-row{
+  scroll-snap-align:start !important;
+  scroll-snap-stop:always !important;
+  box-sizing:border-box !important;
+}
+
+/* Keep the controls visible while the package list moves. */
+.admin-card #adminContent > h2{
+  flex:0 0 auto !important;
+}
+
+.admin-card #adminContent > .admin-toolbar,
+.admin-card #adminContent > .admin-filters{
+  flex:0 0 auto !important;
+  background:inherit;
+}
+
+@media(max-width:768px){
+  .admin-card #adminRows{
+    min-height:0 !important;
+    height:0 !important;
+    flex:1 1 0 !important;
+    scroll-snap-type:y mandatory !important;
+    scroll-padding-top:4px !important;
+    padding:10px 4px 20px 0 !important;
+  }
+
+  .admin-card #adminRows .admin-row{
+    scroll-margin-top:4px !important;
+    scroll-snap-align:start !important;
+    scroll-snap-stop:always !important;
+    margin-bottom:12px !important;
+  }
+}
+
+@media(max-width:380px){
+  .admin-card #adminRows{
+    padding-right:2px !important;
+  }
+}
