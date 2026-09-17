@@ -143,9 +143,6 @@ function openDetail(id) {
   if (!item) return;
 
   const provider = providers.find(x => x.id === item.provider_id);
-  const msg = encodeURIComponent(
-    `Halo IPING CELL, saya ingin membeli ${item.name} - ${money(item.price)} (${item.duration}).`
-  );
 
   const box = $("#detailContent");
   if (!box) return;
@@ -158,11 +155,49 @@ function openDetail(id) {
       Masa aktif: ${esc(item.duration)}<br>
       ${esc(item.tag || "Internet")}
     </p>
-    <a class="primary-btn" target="_blank" rel="noopener"
-       href="https://wa.me/6285875177710?text=${msg}">
-       PESAN VIA WHATSAPP
-    </a>
+
+    <button type="button" class="primary-btn" id="orderWhatsapp">
+      PESAN VIA WHATSAPP
+    </button>
   `;
+
+  const orderBtn = $("#orderWhatsapp");
+
+  orderBtn?.addEventListener("click", () => {
+    let nomor = prompt(
+      "Masukkan nomor tujuan:\nContoh: 08xxxxxxxxxx"
+    );
+
+    if (nomor === null) return;
+
+    nomor = nomor.trim().replace(/[\s-]/g, "");
+
+    if (!/^08\d{8,13}$/.test(nomor)) {
+      showToast("⚠️ Nomor tujuan tidak valid. Gunakan format 08xxxxxxxxxx.");
+      return;
+    }
+
+    const msg = encodeURIComponent(
+`Halo IPING CELL,
+
+Saya ingin membeli paket:
+
+Provider : ${provider?.name || ""}
+Paket    : ${item.name}
+Masa Aktif : ${item.duration}
+Harga    : ${money(item.price)}
+
+Nomor tujuan:
+${nomor}
+
+Terima kasih.`
+    );
+
+    window.open(
+      `https://wa.me/6285875177710?text=${msg}`,
+      "_blank"
+    );
+  });
 
   const modal = $("#detailModal");
   if (modal) modal.hidden = false;
